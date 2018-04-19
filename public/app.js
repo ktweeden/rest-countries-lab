@@ -2,73 +2,64 @@ let countriesArray = [];
 let regionsArray = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-
   const url = 'https://restcountries.eu/rest/v2/all';
-  // makeRequest(url, requestComplete);
-  makeRequest(url, assignCountriesData);
-
+  makeRequest(url, populateData);
 });
 
-const assignCountriesData = function() {
+const populateData = function() {
   if (this.status !== 200) return;
   const jsonString = this.responseText;
-  const countries = JSON.parse(jsonString);
-  countriesArray = countries;
+  countriesArray = JSON.parse(jsonString);
 
   const button = document.querySelector('#displayButton');
   button.addEventListener('click', () => {
-    populateList(countriesArray);
+    populateList();
   });
 
-  populateSelector(countriesArray);
-  populateRegions();
-  console.log(regionsArray);
+  populateCountrySelector();
+  populateRegionsArray();
+  populateRegionSelector();
 }
 
-const populateRegions = function(){
+const populateRegionsArray = function(){
   countriesArray.forEach((country) =>{
-    country.regionalBlocs.forEach(region => {
-      if (!regionsArray.includes(region)){
-        regionsArray.push(region);
-      }
-    })
-  })
-
+    if (!regionsArray.includes(country.region)){
+      regionsArray.push(country.region);
+    }
+  });
 }
 
 const populateRegionSelector = function(){
   const selector = document.querySelector('#choose-regions')
   regionsArray.forEach((region) => {
     createRegionSelection(selector, region);
-  })
+  });
 }
 
 const createRegionSelection = function(parent, region){
   const option = document.createElement('option');
-  option.value = region.name;
-  option.textContent = region.name;
+  option.value = region;
+  option.textContent = region;
   parent.appendChild(option);
   parent.onchange=displayCountriesByRegion;
 }
 
 const displayCountriesByRegion = function(){
-  const regionName = this.value;
+  const region = this.value;
   const countriesInRegionArray = countriesArray.filter((country)=>{
     let isAMatch = false;
-    country.regionalBlocs.forEach((region) => {
-      if (region.name === regionName){
+    if (country.region === region){
         isAMatch = true;
-      }
-    })
+    }
     return isAMatch;
-  })
-
+  });
+  const ul = document.querySelector('#country-list')
+  ul.innerHTML = '';
   countriesInRegionArray.forEach(country => {
     createCountryHTML(country);
-  })
+  });
 }
 
-//reusable and can be used with many apis
 const makeRequest = function (url, callback) {
   const request = new XMLHttpRequest();
   request.open('GET', url);
@@ -76,11 +67,10 @@ const makeRequest = function (url, callback) {
   request.addEventListener('load', callback);
 }
 
-const populateList = function(countries){
-  // console.log(countries);
+const populateList = function(){
   const ul = document.querySelector('#country-list')
-
-  countries.forEach((country) => {
+  ul.innerHTML = '';
+  countriesArray.forEach((country) => {
     const li = document.createElement('li');
     li.textContent = country.name;
     ul.appendChild(li);
@@ -88,8 +78,7 @@ const populateList = function(countries){
 
 }
 
-const createCountrySelection = function(parent, country){
-  // const option = new Option(country.name, country.name);
+const createCountryOptionInSelector = function(parent, country){
   const option = document.createElement('option');
   option.value = country.name;
   option.textContent = country.name;
@@ -97,11 +86,10 @@ const createCountrySelection = function(parent, country){
   parent.onchange=displayDetails;
 }
 
-const populateSelector = function(countries){
+const populateCountrySelector = function(){
   const selector = document.querySelector('#choose-countries')
-
-  countries.forEach((country) => {
-    createCountrySelection(selector, country);
+  countriesArray.forEach((country) => {
+    createCountryOptionInSelector(selector, country);
   })
 }
 
@@ -118,19 +106,14 @@ const displayDetails = function() {
   createCountryHTML(country);
   list.appendChild(document.createElement('hr'));
   findBorderCountries(country);
-  // if (this.status !== 200) return;
-  // const jsonString = this.responseText;
-  // console.dir(this);
-  // const country = JSON.parse(jsonString)[0];
-  // console.log(country);
 }
 
 const findBorderCountries = function(currentCountry) {
   const borderCountries = currentCountry.borders;
-
   const borderCountryObjects = countriesArray.filter(country => {
     return borderCountries.includes(country.alpha3Code);
   });
+
   borderCountryObjects.forEach(country => {
     createCountryHTML(country);
   });
@@ -151,30 +134,3 @@ const createCountryHTML = function(country) {
   const parent = document.querySelector('#country-list');
   parent.appendChild(ul);
 }
-
-// const requestComplete = function () {
-//   // this refers to request obj
-//   if (this.status !== 200) return;
-//   const jsonString = this.responseText;
-//   const countries = JSON.parse(jsonString);
-//   // console.log(countries);
-//   // const country = countries[0];
-//   populateList(countries);
-// }
-
-// const onloadRequestComplete = function () {
-//   // this refers to request obj
-//   if (this.status !== 200) return;
-//   const jsonString = this.responseText;
-//   const countries = JSON.parse(jsonString);
-//   // console.log(countries);
-//   const country = countries[0];
-//   populateSelector(countries);
-// }
-
-// const showInfo = function(){
-//   const name = this.value;
-//   console.log(name);
-//   const url = `https://restcountries.eu/rest/v2/name/${name}`;
-//   makeRequest(url, displayDetails);
-// }
